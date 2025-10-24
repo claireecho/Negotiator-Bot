@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recruiter Bot - Job Offer Negotiation</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>🤖 Recruiter Bot</h1>
+        <p>Negotiate your way to a better job offer!</p>
+      </header>
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message bot-message">
+            <div class="message-content">
+              <strong>Recruiter Bot:</strong> Welcome! I'm here to present you
+              with a job opportunity. Click "Start Conversation" to begin!
+            </div>
+          </div>
+        </div>
+
+        <div class="offer-display" id="offerDisplay" style="display: none">
+          <h3>Current Offer</h3>
+          <div class="offer-card" id="offerCard">
+            <!-- Offer details will be populated here -->
+          </div>
+        </div>
+
+        <div class="input-container">
+          <div class="input-group">
+            <input
+              type="text"
+              id="messageInput"
+              placeholder="Type your negotiation message..."
+              disabled
+            />
+            <button id="sendButton" disabled>Send</button>
+          </div>
+          <button id="startButton" class="start-btn">Start Conversation</button>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-item">
+          <span class="status-label">Status:</span>
+          <span id="statusText">Ready to start</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Conversation:</span>
+          <span id="conversationStatus">Not started</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let conversationStarted = false;
+      let currentOfferLevel = null;
+      let conversationHistory = [];
+
+      const chatMessages = document.getElementById("chatMessages");
+      const messageInput = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      const startButton = document.getElementById("startButton");
+      const offerDisplay = document.getElementById("offerDisplay");
+      const offerCard = document.getElementById("offerCard");
+      const statusText = document.getElementById("statusText");
+      const conversationStatus = document.getElementById("conversationStatus");
+
+      function addMessage(content, isBot = false, isOffer = false) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${
+          isBot ? "bot-message" : "user-message"
+        }`;
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
+
+        if (isOffer) {
+          contentDiv.innerHTML = content;
+        } else {
+          contentDiv.innerHTML = `<strong>${
+            isBot ? "Recruiter Bot" : "You"
+          }:</strong> ${content}`;
+        }
+
+        messageDiv.appendChild(contentDiv);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function updateOfferDisplay(offer, level) {
+        if (!offer) return;
+
+        offerCard.innerHTML = `
+                <div class="offer-title">${offer.title}</div>
+                <div class="offer-salary">${offer.salary}</div>
+                <div class="offer-benefits">
+                    <strong>Benefits:</strong>
+                    <ul>
+                        ${offer.benefits
+                          .map((benefit) => `<li>${benefit}</li>`)
+                          .join("")}
+                    </ul>
+                </div>
+                <div class="offer-description">${offer.description}</div>
+            `;
+
+        offerDisplay.style.display = "block";
+        currentOfferLevel = level;
+      }
+
+      function updateStatus(status, conversation = null) {
+        statusText.textContent = status;
+        if (conversation) {
+          conversationStatus.textContent = conversation;
+        }
+      }
+
+      async function startConversation() {
+        try {
+          updateStatus("Starting conversation...", "Starting");
+          startButton.disabled = true;
+
+          const response = await fetch("/start_conversation", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+
+          addMessage(data.message, true);
+          updateOfferDisplay(data.offer, data.offer_level);
+
+          conversationStarted = true;
+          messageInput.disabled = false;
+          sendButton.disabled = false;
+          startButton.style.display = "none";
+
+          updateStatus("Conversation started", "Active");
+        } catch (error) {
+          console.error("Error starting conversation:", error);
+          addMessage(
+            "Sorry, there was an error starting the conversation. Please try again.",
+            true
+          );
+          updateStatus("Error occurred", "Failed");
+          startButton.disabled = false;
+        }
+      }
+
+      async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message || !conversationStarted) return;
+
+        addMessage(message, false);
+        messageInput.value = "";
+        sendButton.disabled = true;
+        updateStatus("Processing your message...", "Active");
+
+        try {
+          const response = await fetch("/negotiate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: message,
+              offer_level: currentOfferLevel,
+              history: conversationHistory,
+            }),
+          });
+
+          const data = await response.json();
+
+          addMessage(data.response, true);
+          conversationHistory.push({ user: message, bot: data.response });
+
+          if (data.new_offer) {
+            addMessage(
+              `
+                        <div class="offer-update">
+                            <h4>🎉 Offer Improved!</h4>
+                            <div class="offer-title">${
+                              data.new_offer.title
+                            }</div>
+                            <div class="offer-salary">${
+                              data.new_offer.salary
+                            }</div>
+                            <div class="offer-benefits">
+                                <strong>Benefits:</strong>
+                                <ul>
+                                    ${data.new_offer.benefits
+                                      .map((benefit) => `<li>${benefit}</li>`)
+                                      .join("")}
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+              true,
+              true
+            );
+            updateOfferDisplay(data.new_offer, data.new_offer_level);
+          } else if (data.current_offer) {
+            updateOfferDisplay(data.current_offer, data.offer_level);
+          }
+
+          if (data.offer_declined) {
+            addMessage(
+              "I'm sorry, but we cannot improve the offer further at this time. Thank you for your interest in our company.",
+              true
+            );
+            updateStatus("Offer declined", "Ended");
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+          } else {
+            updateStatus("Ready for your response", "Active");
+          }
+        } catch (error) {
+          console.error("Error sending message:", error);
+          addMessage(
+            "Sorry, there was an error processing your message. Please try again.",
+            true
+          );
+          updateStatus("Error occurred", "Active");
+        }
+
+        sendButton.disabled = false;
+      }
+
+      // Event listeners
+      startButton.addEventListener("click", startConversation);
+      sendButton.addEventListener("click", sendMessage);
+
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !sendButton.disabled) {
+          sendMessage();
+        }
+      });
+
+      // Enable/disable send button based on input
+      messageInput.addEventListener("input", () => {
+        sendButton.disabled =
+          !messageInput.value.trim() || !conversationStarted;
+      });
+    </script>
+  </body>
+</html>
