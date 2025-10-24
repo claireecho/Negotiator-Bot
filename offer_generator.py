@@ -262,17 +262,18 @@ class OfferGenerator:
     def _calculate_negotiation_difficulty(self, company_type: CompanyType, company_size: str) -> float:
         """Calculate how difficult it will be to negotiate with this company"""
         base_difficulty = {
-            CompanyType.TECH_GIANT: 0.3,  # Easy to negotiate
-            CompanyType.STARTUP: 0.2,     # Very easy
-            CompanyType.FINANCE: 0.7,     # Hard
-            CompanyType.CONSULTING: 0.6,  # Medium-hard
-            CompanyType.HEALTHCARE: 0.8,  # Very hard
-            CompanyType.AUTOMOTIVE: 0.5,  # Medium
-            CompanyType.RETAIL: 0.9,      # Very hard
-            CompanyType.MEDIA: 0.4        # Easy-medium
+            CompanyType.TECH_GIANT: 0.6,  # Medium-hard (was easy)
+            CompanyType.STARTUP: 0.4,     # Medium (was very easy)
+            CompanyType.FINANCE: 0.8,     # Very hard
+            CompanyType.CONSULTING: 0.7,  # Hard (was medium-hard)
+            CompanyType.HEALTHCARE: 0.9,  # Very hard
+            CompanyType.AUTOMOTIVE: 0.7,  # Hard (was medium)
+            CompanyType.RETAIL: 0.95,     # Extremely hard
+            CompanyType.MEDIA: 0.6        # Medium-hard (was easy-medium)
         }
         
-        size_multiplier = 0.8 if company_size == "Large" else 1.0
+        # Large companies are actually harder to negotiate with due to rigid structures
+        size_multiplier = 1.1 if company_size == "Large" else 0.9
         return min(1.0, base_difficulty[company_type] * size_multiplier)
 
     def get_offer_summary(self, offer: JobOffer) -> str:

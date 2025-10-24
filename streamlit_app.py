@@ -103,35 +103,60 @@ class RecruiterBot:
         self.offer = offer
         self.responses = [
             "Thank you for your interest in joining our team! After reviewing your application, we're pleased to extend you an offer for the {position} position. The salary is ${salary:,} with comprehensive benefits including {benefits}. This offer reflects our assessment of your qualifications and the market rate for this role. Do you have any questions about the offer?",
-            "We understand your perspective. You make some good points. Let me see what I can do - I can bump this to ${salary:,}.",
-            "I appreciate your research and market knowledge. Let me talk to my manager about improving this offer.",
-            "You're clearly talented and we don't want to lose you. I've spoken with compensation and we can go up to ${salary:,}.",
-            "I understand your concerns about market rates. Given your strong negotiation and the value you bring, we're willing to increase our offer.",
-            "We're excited about your potential and don't want this opportunity to slip away. Let's talk about what it would take to get you to yes.",
-            "Thank you for your patience. After reviewing your case and seeing your competing offers, we can offer ${salary:,} with the same benefits package.",
-            "We appreciate your negotiation skills and transparency. We really want to make this work - what if we went to ${salary:,}?",
-            "I understand your position. Let me be frank - you're our top candidate and we're willing to be flexible. What's your target number?",
-            "We value your expertise and the results you've delivered in the past. Let's find a number that works for both of us.",
-            "You've been very persuasive. Let me present this final offer to leadership and get back to you with our best possible number."
+            "I understand your perspective, but ${salary:,} is our standard rate for this level. We have many qualified candidates interested in this position.",
+            "I appreciate your enthusiasm, but our budget is fixed for this role. We can offer additional benefits like flexible hours or professional development opportunities.",
+            "We value your skills, but we need to maintain consistency across our team. Perhaps we can discuss a performance review after 6 months?",
+            "I understand your concerns about market rates. Let me check with our compensation team and get back to you with a revised offer.",
+            "We're excited about your potential, but we need to work within our established salary bands. Would you be open to discussing other forms of compensation?",
+            "Thank you for your patience. After reviewing your case, we can offer ${salary:,} with the same benefits package. This is our final offer.",
+            "We appreciate your negotiation skills, but we need to make a decision soon. We have other candidates waiting for our response.",
+            "I understand your position, but we need to maintain fairness across our team. Our offer stands at ${salary:,}.",
+            "We value your expertise, but we have budget constraints. Perhaps we can revisit this conversation in a few months?",
+            "Thank you for your time. We'll be moving forward with other candidates. Best of luck with your job search."
         ]
-        self.salary_progression = [0, 2000, 5000, 5000, 5000, 10000, 15000, 15000, 15000, 15000, 15000]
+        # Much more conservative salary progression
+        self.salary_progression = [0, 0, 0, 1000, 2000, 3000, 5000, 5000, 5000, 5000, 5000]
     
     def respond(self, round_num):
         if self.offer is None:
             return "No offer available", 0
             
         base_salary = self.offer.base_salary
-        if round_num < len(self.salary_progression):
-            current_salary = base_salary + self.salary_progression[round_num]
-        else:
-            current_salary = base_salary + self.salary_progression[-1]
+        difficulty = self.offer.negotiation_difficulty
         
+        # Adjust salary progression based on difficulty
+        if difficulty < 0.4:  # Easy companies
+            progression = [0, 0, 1000, 2000, 3000, 4000, 5000, 5000, 5000, 5000, 5000]
+        elif difficulty < 0.7:  # Medium companies
+            progression = [0, 0, 0, 1000, 1500, 2500, 3000, 3000, 3000, 3000, 3000]
+        else:  # Hard companies
+            progression = [0, 0, 0, 0, 500, 1000, 1500, 1500, 1500, 1500, 1500]
+        
+        if round_num < len(progression):
+            current_salary = base_salary + progression[round_num]
+        else:
+            current_salary = base_salary + progression[-1]
+        
+        # Add resistance based on difficulty and round
         if round_num < len(self.responses):
             response = self.responses[round_num].format(
                 position=self.offer.position,
                 salary=current_salary,
                 benefits=", ".join(self.offer.benefits[:3])  # Show first 3 benefits
             )
+            
+            # Add resistance for hard companies
+            if difficulty > 0.7 and round_num > 2:
+                resistance_phrases = [
+                    "I need to be clear - this is pushing our budget limits.",
+                    "We have very strict compensation guidelines we must follow.",
+                    "I'm not sure we can justify this increase to leadership.",
+                    "This is significantly above our typical range for this role.",
+                    "We need to maintain equity across our team members."
+                ]
+                if round_num % 2 == 0:  # Every other response
+                    response += f" {random.choice(resistance_phrases)}"
+            
             return response, current_salary
         return "Thank you for your time. We'll be moving forward with other candidates. Best of luck with your job search.", current_salary
 
