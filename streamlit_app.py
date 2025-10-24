@@ -378,11 +378,6 @@ def main():
         st.header("📊 Statistics")
         st.metric("Current Salary", f"${st.session_state.current_salary:,}")
         st.metric("Negotiation Rounds", st.session_state.round_count)
-        st.metric("Salary Increase", f"${st.session_state.current_salary - 85000:,}")
-        
-        if st.session_state.current_salary > 85000:
-            increase_percent = ((st.session_state.current_salary - 85000) / 85000) * 100
-            st.metric("Increase %", f"{increase_percent:.1f}%")
     
     # Main chat area
     st.header("💬 Negotiation Chat")
