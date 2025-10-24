@@ -4,12 +4,18 @@ A smart AI-powered recruiter bot that presents job offers and negotiates with ca
 
 ## ✨ Features
 
-- **Smart Negotiation**: Uses GPT-3.5-turbo to evaluate candidate negotiations
-- **Dynamic Offers**: Three-tier offer system (Entry, Mid, Senior level positions)
+- **AI-Powered Negotiation**: Uses GPT-3.5-turbo to evaluate candidate negotiations with realistic recruiter behavior
+- **Real Company Offers**: Personalized offers from actual tech companies (Google, Microsoft, Apple, Amazon, Airbnb, Stripe, etc.)
+- **Professional PDF Generation**: Download detailed offer letters as PDFs that match your exact offer
+- **Progressive Difficulty**: Negotiations become more challenging with each attempt - first try is moderate, subsequent attempts are much stricter
+- **Company Preservation**: Offers maintain the same company and position throughout negotiations - only compensation improves
+- **Change Explanations**: Clear explanations of what specifically changed in improved offers
+- **Four-Tier System**: New Grad, Entry, Mid, and Senior level positions with appropriate compensation and benefits
 - **Real-time Chat**: Interactive web interface for seamless conversation
-- **Professional UI**: Modern, responsive design with smooth animations
-- **Offer Management**: Visual display of current offers with benefits and salary ranges
-- **Intelligent Responses**: Bot can improve, maintain, or decline offers based on negotiation quality
+- **Professional UI**: Modern, responsive design with smooth animations and collapsible offer display
+- **Offer Management**: Visual display of current offers with company branding, benefits, equity, and signing bonuses
+- **Intelligent Responses**: Bot can improve, maintain, decline, or withdraw offers based on negotiation quality and attempt number
+- **Offer Withdrawal**: Bot can withdraw offers for unprofessional, demanding, or disrespectful behavior
 - **User-Friendly Setup**: No environment variables needed - enter your OpenAI API key directly in the web interface
 
 ## 🚀 Quick Start
@@ -242,6 +248,71 @@ app.run(host='0.0.0.0', port=port, debug=False)
 - [ ] Advanced analytics and reporting
 - [ ] Integration with HR systems
 - [ ] Multi-language support
+
+## 🎯 How to Use
+
+1. **Start the application** and open your browser to `http://localhost:8080`
+2. **Enter your OpenAI API key** in the provided field
+3. **Click "Start Conversation"** to begin with an initial job offer from a real company
+4. **Review the offer** displayed in the collapsible offer section (click header to expand/collapse)
+5. **Type your negotiation message** in the input field - be specific and professional
+6. **Send your message** and see the recruiter's response
+7. **If offer improves**, you'll see exactly what changed with clear explanations
+8. **Continue negotiating** - but remember, each attempt becomes more difficult
+9. **Download PDF** of your current offer anytime using the download button
+10. **Change API key** anytime using the change button
+
+## 💡 Negotiation Tips
+
+### ✅ Good Negotiation Examples:
+
+- "I have 5 years of experience in React and led a team of 3 developers at my previous company, plus I have AWS certifications"
+- "I have competing offers from Google for $120k and Microsoft for $115k respectively"
+- "I bring specialized skills in machine learning that directly match your AI initiatives"
+
+### ❌ Poor Negotiation Examples:
+
+- "I want more money"
+- "I think I deserve better"
+- "Can you increase the salary?"
+- "I'm really good at coding"
+
+### 🚫 Withdrawal-Worthy Examples (will result in offer withdrawal):
+
+- "This is insulting, I deserve way more than this"
+- "You're being cheap, I know you can afford more"
+- "This is pathetic, I expected better from [company name]"
+- "I'm not accepting anything less than $200k"
+- "You're making a mistake if you don't give me what I want"
+- "I have other offers, you better match them or I'm gone"
+
+### 🎯 Strategy:
+
+- **First attempt**: Be specific about your value and experience
+- **Second attempt**: Provide concrete evidence of competing offers or unique skills
+- **Third+ attempts**: Only try if you have exceptional qualifications - the bot becomes very strict
+
+## 🏢 Supported Companies
+
+The bot can present offers from these real tech companies:
+
+**Tech Giants:**
+
+- Google 🔍
+- Microsoft 🪟
+- Apple 🍎
+- Amazon 📦
+
+**Startups:**
+
+- Stripe 💳
+- Airbnb 🏠
+- Slack 💬
+
+**Fintech:**
+
+- PayPal 💰
+- Square ⬜
 
 ## 📄 License
 

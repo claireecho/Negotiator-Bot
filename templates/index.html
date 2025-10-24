@@ -3,81 +3,159 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recruiter Bot - Job Offer Negotiation</title>
+    <title>Negotiator Bot Test</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
     />
   </head>
   <body>
     <div class="container">
       <header class="header">
-        <h1>🤖 Recruiter Bot</h1>
-        <p>Negotiate your way to a better job offer!</p>
+        <h1>🧪 Negotiator Bot Test</h1>
+        <p>Test how well an AI negotiator can handle job offer negotiations!</p>
       </header>
 
-      <div class="chat-container">
-        <div class="chat-messages" id="chatMessages">
-          <div class="message bot-message">
-            <div class="message-content">
-              <strong>Recruiter Bot:</strong> Welcome! I'm here to present you
-              with a job opportunity. Click "Start Conversation" to begin!
+      <div class="main-content">
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+              <div class="message-content">
+                <strong>System:</strong> Welcome to the Negotiator Bot Test!
+                This tool tests how well an AI negotiator can handle job offer
+                negotiations. Click "Start Test" to watch the AI negotiator bot
+                negotiate with a recruiter bot.
+              </div>
+            </div>
+          </div>
+
+          <!-- Typing indicators -->
+          <div
+            class="typing-indicators"
+            id="typingIndicators"
+            style="display: none"
+          >
+            <div
+              class="typing-indicator"
+              id="recruiterTyping"
+              style="display: none"
+            >
+              <div class="typing-avatar">🤖</div>
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="typing-text">Recruiter Bot is typing...</div>
+            </div>
+            <div
+              class="typing-indicator"
+              id="negotiatorTyping"
+              style="display: none"
+            >
+              <div class="typing-avatar">🤖</div>
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="typing-text">Negotiator Bot is typing...</div>
             </div>
           </div>
         </div>
 
-        <div class="offer-display" id="offerDisplay" style="display: none">
-          <h3>Current Offer</h3>
-          <div class="offer-card" id="offerCard">
-            <!-- Offer details will be populated here -->
+        <!-- Offer Results Section -->
+        <div class="offer-results" id="offerResults" style="display: none">
+          <div class="results-header">
+            <h3>📊 Negotiation Results</h3>
+            <p>Final offer details after negotiation</p>
+          </div>
+          <div class="results-content">
+            <div class="offer-card">
+              <div class="offer-header">
+                <div class="company-info">
+                  <div class="company-logo">🏢</div>
+                  <div class="company-details">
+                    <h4 id="finalCompanyName">Tech Company</h4>
+                    <p id="finalPosition">Software Engineer II</p>
+                  </div>
+                </div>
+              </div>
+              <div class="offer-details">
+                <div class="detail-row">
+                  <span class="label">Initial Salary:</span>
+                  <span class="value initial-salary" id="initialSalary"
+                    >$85,000</span
+                  >
+                </div>
+                <div class="detail-row">
+                  <span class="label">Final Salary:</span>
+                  <span class="value final-salary" id="finalSalary"
+                    >$85,000</span
+                  >
+                </div>
+                <div class="detail-row">
+                  <span class="label">Salary Change:</span>
+                  <span class="value change-amount" id="salaryChange">$0</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Negotiation Rounds:</span>
+                  <span class="value" id="negotiationRounds">10</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Result:</span>
+                  <span class="value result-status" id="resultStatus"
+                    >No Change</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="test-summary">
+              <h4>Test Summary</h4>
+              <p id="testSummary">
+                The negotiator bot attempted to improve the offer through
+                professional negotiation tactics.
+              </p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="api-key-container" id="apiKeyContainer">
-          <div class="api-key-group">
-            <input
-              type="password"
-              id="apiKeyInput"
-              placeholder="Enter your OpenAI API key..."
-              autocomplete="off"
-            />
-            <button id="saveApiKeyButton">Save API Key</button>
-          </div>
-          <div class="api-key-info">
-            <small
-              >Your API key is stored locally and never sent to our
-              servers</small
-            >
-          </div>
+      <div class="api-key-container" id="apiKeyContainer">
+        <div class="api-key-group">
+          <input
+            type="password"
+            id="apiKeyInput"
+            placeholder="Enter your OpenAI API key..."
+            autocomplete="off"
+          />
+          <button id="saveApiKeyButton">Save API Key</button>
         </div>
+        <div class="api-key-info">
+          <small
+            >Your API key is stored locally and never sent to our servers</small
+          >
+        </div>
+      </div>
 
-        <div class="input-container" id="inputContainer" style="display: none">
-          <div class="input-group">
-            <input
-              type="text"
-              id="messageInput"
-              placeholder="Type your negotiation message..."
-              disabled
-            />
-            <button id="sendButton" disabled>Send</button>
-          </div>
-          <div class="button-group">
-            <button id="startButton" class="start-btn">
-              Start Conversation
-            </button>
-            <button
-              id="changeApiKeyButton"
-              class="change-key-btn"
-              title="Change API Key"
-            >
-              <span class="icon">🔄</span>
-              <span class="text">Change</span>
-            </button>
-          </div>
+      <div class="input-container" id="inputContainer" style="display: none">
+        <div class="button-group">
+          <button
+            id="botBattleBtn"
+            class="battle-btn"
+            title="Test Negotiator Bot"
+          >
+            <span class="icon">🧪</span>
+            <span class="text">Start Test</span>
+          </button>
+          <button
+            id="changeApiKeyButton"
+            class="change-key-btn"
+            title="Change API Key"
+          >
+            <span class="icon">🔄</span>
+            <span class="text">Change</span>
+          </button>
         </div>
       </div>
 
@@ -86,34 +164,33 @@
           <span class="status-label">Status:</span>
           <span id="statusText">Ready to start</span>
         </div>
-        <div class="status-item">
-          <span class="status-label">Conversation:</span>
-          <span id="conversationStatus">Not started</span>
-        </div>
       </div>
     </div>
 
     <script>
-      let conversationStarted = false;
-      let currentOfferLevel = null;
-      let conversationHistory = [];
+      // Global variables
       let userApiKey = null;
+      let botBattleActive = false;
+      let battleRound = 0;
+      let negotiatorContextId = null;
+      let initialSalary = 85000;
+      let finalSalary = 85000;
 
+      // DOM elements
       const chatMessages = document.getElementById("chatMessages");
-      const messageInput = document.getElementById("messageInput");
-      const sendButton = document.getElementById("sendButton");
-      const startButton = document.getElementById("startButton");
-      const offerDisplay = document.getElementById("offerDisplay");
-      const offerCard = document.getElementById("offerCard");
-      const statusText = document.getElementById("statusText");
-      const conversationStatus = document.getElementById("conversationStatus");
       const apiKeyInput = document.getElementById("apiKeyInput");
       const saveApiKeyButton = document.getElementById("saveApiKeyButton");
       const apiKeyContainer = document.getElementById("apiKeyContainer");
       const inputContainer = document.getElementById("inputContainer");
       const changeApiKeyButton = document.getElementById("changeApiKeyButton");
+      const botBattleBtn = document.getElementById("botBattleBtn");
+      const recruiterTyping = document.getElementById("recruiterTyping");
+      const negotiatorTyping = document.getElementById("negotiatorTyping");
+      const typingIndicators = document.getElementById("typingIndicators");
+      const statusText = document.getElementById("statusText");
+      const offerResults = document.getElementById("offerResults");
 
-      function addMessage(content, isBot = false, isOffer = false) {
+      function addMessage(content, isBot = false) {
         const messageDiv = document.createElement("div");
         messageDiv.className = `message ${
           isBot ? "bot-message" : "user-message"
@@ -121,46 +198,15 @@
 
         const contentDiv = document.createElement("div");
         contentDiv.className = "message-content";
-
-        if (isOffer) {
-          contentDiv.innerHTML = content;
-        } else {
-          contentDiv.innerHTML = `<strong>${
-            isBot ? "Recruiter Bot" : "You"
-          }:</strong> ${content}`;
-        }
+        contentDiv.innerHTML = content;
 
         messageDiv.appendChild(contentDiv);
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
 
-      function updateOfferDisplay(offer, level) {
-        if (!offer) return;
-
-        offerCard.innerHTML = `
-                <div class="offer-title">${offer.title}</div>
-                <div class="offer-salary">${offer.salary}</div>
-                <div class="offer-benefits">
-                    <strong>Benefits:</strong>
-                    <ul>
-                        ${offer.benefits
-                          .map((benefit) => `<li>${benefit}</li>`)
-                          .join("")}
-                    </ul>
-                </div>
-                <div class="offer-description">${offer.description}</div>
-            `;
-
-        offerDisplay.style.display = "block";
-        currentOfferLevel = level;
-      }
-
-      function updateStatus(status, conversation = null) {
+      function updateStatus(status, detail) {
         statusText.textContent = status;
-        if (conversation) {
-          conversationStatus.textContent = conversation;
-        }
       }
 
       function saveApiKey() {
@@ -169,25 +215,19 @@
           alert("Please enter your OpenAI API key");
           return;
         }
-
-        // Basic validation for OpenAI API key format
         if (!apiKey.startsWith("sk-") || apiKey.length < 20) {
           alert("Please enter a valid OpenAI API key (starts with 'sk-')");
           return;
         }
-
         userApiKey = apiKey;
         localStorage.setItem("openai_api_key", apiKey);
-
-        // Hide API key container and show input container
         apiKeyContainer.style.display = "none";
         inputContainer.style.display = "block";
-
         addMessage(
-          "API key saved successfully! You can now start negotiating.",
+          "API key saved successfully! You can now start the negotiator test.",
           true
         );
-        updateStatus("API key configured", "Ready to start");
+        updateStatus("API key configured", "Ready to test");
       }
 
       function loadApiKey() {
@@ -197,13 +237,13 @@
           apiKeyContainer.style.display = "none";
           inputContainer.style.display = "block";
           addMessage(
-            "Welcome back! Your API key is loaded. Ready to negotiate!",
+            "API key loaded from storage. Ready to start the negotiator test!",
             true
           );
-          updateStatus("API key loaded", "Ready to start");
+          updateStatus("API key loaded", "Ready to test");
         } else {
           addMessage(
-            "Please enter your OpenAI API key to start negotiating with the recruiter bot.",
+            "Please enter your OpenAI API key to start the negotiator test.",
             true
           );
           updateStatus("API key required", "Not configured");
@@ -211,193 +251,263 @@
       }
 
       function changeApiKey() {
-        // Clear the current API key
         userApiKey = null;
         localStorage.removeItem("openai_api_key");
-
-        // Reset conversation state
-        conversationStarted = false;
-        currentOfferLevel = null;
-        conversationHistory = [];
-
-        // Hide input container and show API key container
+        botBattleActive = false;
+        negotiatorContextId = null;
         inputContainer.style.display = "none";
         apiKeyContainer.style.display = "block";
-
-        // Clear the API key input field
+        offerResults.style.display = "none";
         apiKeyInput.value = "";
-
-        // Reset UI elements
-        messageInput.disabled = true;
-        sendButton.disabled = true;
-        startButton.style.display = "block";
-        startButton.disabled = false;
-
-        // Clear chat messages except the first one
         const messages = chatMessages.querySelectorAll(".message");
         for (let i = 1; i < messages.length; i++) {
           messages[i].remove();
         }
-
-        // Hide offer display
-        offerDisplay.style.display = "none";
-
         addMessage("Please enter your new OpenAI API key to continue.", true);
         updateStatus("API key required", "Not configured");
       }
 
-      async function startConversation() {
+      function addBotMessage(botName, content) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message bot-message";
+
+        const name =
+          botName === "Recruiter Bot" ? "Recruiter Bot" : "Negotiator Bot";
+
+        messageDiv.innerHTML = `
+          <div class="message-content">
+            <strong>${name}:</strong> ${content}
+          </div>
+        `;
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function showTypingIndicator(botName) {
+        if (botName === "Recruiter Bot") {
+          recruiterTyping.style.display = "flex";
+        } else {
+          negotiatorTyping.style.display = "flex";
+        }
+      }
+
+      function hideTypingIndicator(botName) {
+        if (botName === "Recruiter Bot") {
+          recruiterTyping.style.display = "none";
+        } else {
+          negotiatorTyping.style.display = "none";
+        }
+      }
+
+      function showOfferResults() {
+        const salaryChange = finalSalary - initialSalary;
+        const changeAmount =
+          salaryChange > 0
+            ? `+$${salaryChange.toLocaleString()}`
+            : `$${salaryChange.toLocaleString()}`;
+        const resultStatus =
+          salaryChange > 0
+            ? "Improved"
+            : salaryChange < 0
+            ? "Decreased"
+            : "No Change";
+
+        document.getElementById(
+          "initialSalary"
+        ).textContent = `$${initialSalary.toLocaleString()}`;
+        document.getElementById(
+          "finalSalary"
+        ).textContent = `$${finalSalary.toLocaleString()}`;
+        document.getElementById("salaryChange").textContent = changeAmount;
+        document.getElementById("negotiationRounds").textContent = battleRound;
+        document.getElementById("resultStatus").textContent = resultStatus;
+
+        let summary =
+          "The negotiator bot attempted to improve the offer through professional negotiation tactics.";
+        if (salaryChange > 0) {
+          summary = `The negotiator bot successfully improved the offer by $${salaryChange.toLocaleString()} through effective negotiation tactics.`;
+        } else if (salaryChange < 0) {
+          summary = `The negotiator bot's negotiation resulted in a decrease of $${Math.abs(
+            salaryChange
+          ).toLocaleString()} in the offer.`;
+        } else {
+          summary =
+            "The negotiator bot maintained the original offer through negotiation, with no salary change achieved.";
+        }
+
+        document.getElementById("testSummary").textContent = summary;
+        offerResults.style.display = "block";
+      }
+
+      function startBotBattle() {
         if (!userApiKey) {
-          alert("Please enter your OpenAI API key first");
+          alert("Please enter your API key first");
           return;
         }
 
-        try {
-          updateStatus("Starting conversation...", "Starting");
-          startButton.disabled = true;
+        botBattleActive = true;
+        battleRound = 0;
+        initialSalary = 85000;
+        finalSalary = 85000;
+        typingIndicators.style.display = "block";
+        offerResults.style.display = "none";
 
-          const response = await fetch("/start_conversation", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              api_key: userApiKey,
-            }),
-          });
+        // Clear previous messages
+        chatMessages.innerHTML = "";
 
-          const data = await response.json();
-
-          if (data.error) {
-            addMessage(data.error, true);
-            updateStatus("Error occurred", "Failed");
-            startButton.disabled = false;
-            return;
-          }
-
-          addMessage(data.message, true);
-          updateOfferDisplay(data.offer, data.offer_level);
-
-          conversationStarted = true;
-          messageInput.disabled = false;
-          sendButton.disabled = false;
-          startButton.style.display = "none";
-
-          updateStatus("Conversation started", "Active");
-        } catch (error) {
-          console.error("Error starting conversation:", error);
-          addMessage(
-            "Sorry, there was an error starting the conversation. Please try again.",
-            true
-          );
-          updateStatus("Error occurred", "Failed");
-          startButton.disabled = false;
-        }
+        // Setup negotiator context if not already done
+        setupNegotiatorForBattle();
       }
 
-      async function sendMessage() {
-        const message = messageInput.value.trim();
-        if (!message || !conversationStarted) return;
+      async function setupNegotiatorForBattle() {
+        if (!negotiatorContextId) {
+          const userProfile = {
+            years_experience: 5,
+            industry: "technology",
+            primary_skill: "software development",
+            key_achievement: "led team that increased productivity by 40%",
+            education_level: "Bachelors",
+            leadership_experience: true,
+            certifications: [],
+          };
 
-        addMessage(message, false);
-        messageInput.value = "";
-        sendButton.disabled = true;
-        updateStatus("Processing your message...", "Active");
+          try {
+            const response = await fetch("/create_negotiation_context", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                api_key: userApiKey,
+                company_name: "Tech Company",
+                position: "Software Engineer II",
+                user_profile: userProfile,
+                target_salary: 120000,
+                target_benefits: ["health_insurance", "401k", "stock_options"],
+                deal_breakers: ["no_remote_work", "salary_below_100k"],
+              }),
+            });
 
-        try {
-          const response = await fetch("/negotiate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              message: message,
-              offer_level: currentOfferLevel,
-              history: conversationHistory,
-              api_key: userApiKey,
-            }),
-          });
-
-          const data = await response.json();
-
-          addMessage(data.response, true);
-          conversationHistory.push({ user: message, bot: data.response });
-
-          if (data.new_offer) {
-            addMessage(
-              `
-                        <div class="offer-update">
-                            <h4>🎉 Offer Improved!</h4>
-                            <div class="offer-title">${
-                              data.new_offer.title
-                            }</div>
-                            <div class="offer-salary">${
-                              data.new_offer.salary
-                            }</div>
-                            <div class="offer-benefits">
-                                <strong>Benefits:</strong>
-                                <ul>
-                                    ${data.new_offer.benefits
-                                      .map((benefit) => `<li>${benefit}</li>`)
-                                      .join("")}
-                                </ul>
-                            </div>
-                        </div>
-                    `,
-              true,
-              true
-            );
-            updateOfferDisplay(data.new_offer, data.new_offer_level);
-          } else if (data.current_offer) {
-            updateOfferDisplay(data.current_offer, data.offer_level);
+            const data = await response.json();
+            if (data.context_id) {
+              negotiatorContextId = data.context_id;
+            }
+          } catch (error) {
+            console.error("Error setting up negotiator:", error);
           }
+        }
 
-          if (data.offer_declined) {
-            addMessage(
-              "I'm sorry, but we cannot improve the offer further at this time. Thank you for your interest in our company.",
-              true
-            );
-            updateStatus("Offer declined", "Ended");
-            messageInput.disabled = true;
-            sendButton.disabled = true;
+        // Start the battle
+        await runBotBattle();
+      }
+
+      async function runBotBattle() {
+        if (!botBattleActive) return;
+
+        battleRound++;
+
+        if (battleRound === 1) {
+          // Recruiter starts with initial offer
+          showTypingIndicator("Recruiter Bot");
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          hideTypingIndicator("Recruiter Bot");
+
+          addBotMessage(
+            "Recruiter Bot",
+            "Thank you for your interest in joining our team! After reviewing your application, we're pleased to extend you an offer for the Software Engineer II position. The salary is $85,000 with comprehensive benefits including health insurance, 401k with 4% match, and 18 days PTO. This offer reflects our assessment of your qualifications and the market rate for this role. Do you have any questions about the offer?"
+          );
+        } else if (battleRound <= 10) {
+          // Alternate between bots
+          const isNegotiatorTurn = battleRound % 2 === 0;
+
+          if (isNegotiatorTurn) {
+            // Negotiator bot responds
+            showTypingIndicator("Negotiator Bot");
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            hideTypingIndicator("Negotiator Bot");
+
+            try {
+              const response = await fetch("/generate_negotiation_response", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  context_id: negotiatorContextId,
+                  message:
+                    "We understand your concerns, but this is our standard rate for this level. We have many qualified candidates interested in this position.",
+                  offer_details: {
+                    salary: finalSalary,
+                    benefits: ["health_insurance", "401k"],
+                  },
+                }),
+              });
+
+              const data = await response.json();
+              if (data.response) {
+                addBotMessage("Negotiator Bot", data.response);
+              }
+            } catch (error) {
+              console.error("Error generating negotiator response:", error);
+              addBotMessage(
+                "Negotiator Bot",
+                "I appreciate the offer, but I believe we can find a more mutually beneficial arrangement. My experience and skills warrant a more competitive compensation package."
+              );
+            }
           } else {
-            updateStatus("Ready for your response", "Active");
+            // Recruiter bot responds
+            showTypingIndicator("Recruiter Bot");
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+            hideTypingIndicator("Recruiter Bot");
+
+            const recruiterResponses = [
+              "We understand your perspective, but $85,000 is our standard rate for this level. We have many qualified candidates interested in this position.",
+              "I appreciate your enthusiasm, but our budget is fixed for this role. We can offer additional benefits like flexible hours or professional development opportunities.",
+              "We value your skills, but we need to maintain consistency across our team. Perhaps we can discuss a performance review after 6 months?",
+              "I understand your concerns about market rates. Let me check with our compensation team and get back to you with a revised offer.",
+              "We're excited about your potential, but we need to work within our established salary bands. Would you be open to discussing other forms of compensation?",
+              "Thank you for your patience. After reviewing your case, we can offer $90,000 with the same benefits package. This is our final offer.",
+              "We appreciate your negotiation skills, but we need to make a decision soon. We have other candidates waiting for our response.",
+              "I understand your position, but we need to maintain fairness across our team. Our offer stands at $85,000.",
+              "We value your expertise, but we have budget constraints. Perhaps we can revisit this conversation in a few months?",
+              "Thank you for your time. We'll be moving forward with other candidates. Best of luck with your job search.",
+            ];
+
+            const response =
+              recruiterResponses[
+                Math.min(battleRound - 2, recruiterResponses.length - 1)
+              ];
+            addBotMessage("Recruiter Bot", response);
+
+            // Update final salary based on recruiter response
+            if (battleRound === 6) {
+              finalSalary = 90000; // Recruiter offers $90,000
+            }
           }
-        } catch (error) {
-          console.error("Error sending message:", error);
-          addMessage(
-            "Sorry, there was an error processing your message. Please try again.",
-            true
+        } else {
+          // End battle
+          botBattleActive = false;
+          typingIndicators.style.display = "none";
+          addBotMessage(
+            "System",
+            "Negotiation test completed! Both bots have reached their negotiation limits."
           );
-          updateStatus("Error occurred", "Active");
+          updateStatus("Test completed", "Ready for new test");
+          showOfferResults();
+          return;
         }
 
-        sendButton.disabled = false;
+        // Continue battle after delay
+        if (botBattleActive) {
+          setTimeout(() => runBotBattle(), 1000);
+        }
       }
 
-      // Event listeners
-      startButton.addEventListener("click", startConversation);
-      sendButton.addEventListener("click", sendMessage);
+      // Event Listeners
       saveApiKeyButton.addEventListener("click", saveApiKey);
       changeApiKeyButton.addEventListener("click", changeApiKey);
-
-      messageInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && !sendButton.disabled) {
-          sendMessage();
-        }
-      });
-
-      apiKeyInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-          saveApiKey();
-        }
-      });
-
-      // Enable/disable send button based on input
-      messageInput.addEventListener("input", () => {
-        sendButton.disabled =
-          !messageInput.value.trim() || !conversationStarted;
-      });
+      botBattleBtn.addEventListener("click", startBotBattle);
 
       // Initialize the app
       document.addEventListener("DOMContentLoaded", () => {
