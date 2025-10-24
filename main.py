@@ -14,7 +14,7 @@ import io
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
-from offer_generator import OfferGenerator, CompanyType
+# Import moved to avoid circular dependency
 
 # Load environment variables from .env file
 load_dotenv()
@@ -423,7 +423,15 @@ What combination of these would make sense for your organization?""",
 
 # Global instances
 negotiator_bot = None
-offer_generator = OfferGenerator()
+offer_generator = None
+
+def get_offer_generator():
+    """Lazy initialization of offer generator to avoid circular imports"""
+    global offer_generator
+    if offer_generator is None:
+        from offer_generator import OfferGenerator
+        offer_generator = OfferGenerator()
+    return offer_generator
     
 # Company-specific job offers with different levels
 COMPANIES = {
@@ -892,12 +900,14 @@ def get_random_offer():
         
         if company_type_str:
             try:
+                from offer_generator import CompanyType
                 company_type = CompanyType(company_type_str)
             except ValueError:
                 pass  # Use random if invalid type
         
         # Generate offer
-        offer = offer_generator.generate_offer(company_type)
+        generator = get_offer_generator()
+        offer = generator.generate_offer(company_type)
         
         # Convert to dict for JSON response
         offer_dict = {
@@ -924,7 +934,8 @@ def get_multiple_offers():
         count = int(request.args.get("count", 5))
         count = min(max(count, 1), 10)  # Limit between 1 and 10
         
-        offers = offer_generator.generate_multiple_offers(count)
+        generator = get_offer_generator()
+        offers = generator.generate_multiple_offers(count)
         
         # Convert to list of dicts
         offers_list = []
