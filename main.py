@@ -1,6 +1,7 @@
 import os
 import json
 from flask import Flask, render_template, request, jsonify, send_file
+from werkzeug.utils import secure_filename
 from openai import OpenAI
 import random
 from dotenv import load_dotenv
@@ -20,6 +21,18 @@ from enum import Enum
 load_dotenv()
 
 app = Flask(__name__)
+
+# Configure file upload
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Create upload directory if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Negotiator Bot Classes
 class NegotiationStrategy(Enum):
@@ -955,6 +968,55 @@ def get_multiple_offers():
             offers_list.append(offer_dict)
         
         return jsonify(offers_list)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/upload_resume", methods=["POST"])
+def upload_resume():
+    """Upload and parse resume file"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Parse resume
+            from resume_parser import ResumeParser
+            parser = ResumeParser()
+            file_type = filename.rsplit('.', 1)[1].lower()
+            resume_data = parser.parse_resume(file_path, file_type)
+            
+            # Clean up uploaded file
+            os.remove(file_path)
+            
+            # Convert to dict for JSON response
+            resume_dict = {
+                "name": resume_data.name,
+                "email": resume_data.email,
+                "phone": resume_data.phone,
+                "years_experience": resume_data.years_experience,
+                "current_title": resume_data.current_title,
+                "current_company": resume_data.current_company,
+                "skills": resume_data.skills,
+                "education": resume_data.education,
+                "experience": resume_data.experience,
+                "achievements": resume_data.achievements,
+                "certifications": resume_data.certifications,
+                "languages": resume_data.languages,
+                "summary": resume_data.summary
+            }
+            
+            return jsonify(resume_dict)
+        else:
+            return jsonify({"error": "Invalid file type. Please upload PDF, DOCX, or TXT files."}), 400
+            
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -4,9 +4,12 @@ import json
 from datetime import datetime
 from main import NegotiatorBot, NegotiationStrategy, ResponseTone, NegotiationContext, ResponseTemplate
 from offer_generator import OfferGenerator, CompanyType
+from resume_parser import ResumeParser
 from dataclasses import dataclass
 from typing import List, Dict
 import random
+import tempfile
+import os
 
 # Page configuration
 st.set_page_config(
@@ -96,6 +99,10 @@ if 'current_offer' not in st.session_state:
     st.session_state.current_offer = None
 if 'offer_generator' not in st.session_state:
     st.session_state.offer_generator = OfferGenerator()
+if 'resume_parser' not in st.session_state:
+    st.session_state.resume_parser = ResumeParser()
+if 'resume_data' not in st.session_state:
+    st.session_state.resume_data = None
 
 # Recruiter Bot Class
 class RecruiterBot:
@@ -103,14 +110,14 @@ class RecruiterBot:
         self.offer = offer
         self.responses = [
             "Thank you for your interest in joining our team! After reviewing your application, we're pleased to extend you an offer for the {position} position. The salary is ${salary:,} with comprehensive benefits including {benefits}. This offer reflects our assessment of your qualifications and the market rate for this role. Do you have any questions about the offer?",
-            "I understand your perspective, but ${salary:,} is our standard rate for this level. We have many qualified candidates interested in this position.",
+            "I understand your perspective, but our standard rate for this level is firm. We have many qualified candidates interested in this position.",
             "I appreciate your enthusiasm, but our budget is fixed for this role. We can offer additional benefits like flexible hours or professional development opportunities.",
             "We value your skills, but we need to maintain consistency across our team. Perhaps we can discuss a performance review after 6 months?",
             "I understand your concerns about market rates. Let me check with our compensation team and get back to you with a revised offer.",
             "We're excited about your potential, but we need to work within our established salary bands. Would you be open to discussing other forms of compensation?",
             "Thank you for your patience. After reviewing your case, we can offer ${salary:,} with the same benefits package. This is our final offer.",
             "We appreciate your negotiation skills, but we need to make a decision soon. We have other candidates waiting for our response.",
-            "I understand your position, but we need to maintain fairness across our team. Our offer stands at ${salary:,}.",
+            "I understand your position, but we need to maintain fairness across our team. Our offer remains at ${salary:,}.",
             "We value your expertise, but we have budget constraints. Perhaps we can revisit this conversation in a few months?",
             "Thank you for your time. We'll be moving forward with other candidates. Best of luck with your job search."
         ]
@@ -139,11 +146,26 @@ class RecruiterBot:
         
         # Add resistance based on difficulty and round
         if round_num < len(self.responses):
-            response = self.responses[round_num].format(
-                position=self.offer.position,
-                salary=current_salary,
-                benefits=", ".join(self.offer.benefits[:3])  # Show first 3 benefits
-            )
+            # Show salary in response if it's the initial offer OR if it's actually an increase
+            if round_num == 0 or current_salary > base_salary:
+                response = self.responses[round_num].format(
+                    position=self.offer.position,
+                    salary=current_salary,
+                    benefits=", ".join(self.offer.benefits[:3])  # Show first 3 benefits
+                )
+            else:
+                # For other responses without increases, don't mention specific salary amounts
+                response = self.responses[round_num]
+                # Only replace salary if the response actually mentions a salary increase
+                if "can offer" in response.lower() or "revised offer" in response.lower():
+                    response = response.replace("{salary:,}", f"${current_salary:,}")
+                elif "{salary:,}" in response:
+                    # Remove salary mention for responses that don't represent increases
+                    response = response.replace("{salary:,}", "our current offer")
+                if "{position}" in response:
+                    response = response.replace("{position}", self.offer.position)
+                if "{benefits}" in response:
+                    response = response.replace("{benefits}", ", ".join(self.offer.benefits[:3]))
             
             # Add resistance for hard companies
             if difficulty > 0.7 and round_num > 2:
@@ -225,6 +247,41 @@ def main():
         
         st.divider()
         
+        # Resume Upload Section
+        st.header("📄 Resume Upload")
+        
+        uploaded_file = st.file_uploader(
+            "Upload your resume (PDF, DOCX, or TXT)",
+            type=['pdf', 'docx', 'txt'],
+            help="Upload your resume to personalize the negotiation with your actual experience and skills"
+        )
+        
+        if uploaded_file is not None:
+            try:
+                # Save uploaded file temporarily
+                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
+                    tmp_file.write(uploaded_file.getvalue())
+                    tmp_file_path = tmp_file.name
+                
+                # Parse resume
+                file_type = uploaded_file.name.split('.')[-1]
+                resume_data = st.session_state.resume_parser.parse_resume(tmp_file_path, file_type)
+                st.session_state.resume_data = resume_data
+                
+                # Clean up temp file
+                os.unlink(tmp_file_path)
+                
+                st.success("✅ Resume parsed successfully! Your negotiation will now be personalized based on your experience and skills.")
+                
+            except Exception as e:
+                st.error(f"❌ Error parsing resume: {str(e)}")
+                st.session_state.resume_data = None
+        
+        elif st.session_state.resume_data is None:
+            st.info("💡 Upload your resume to get personalized negotiation responses based on your actual experience and skills!")
+        
+        st.divider()
+        
         # Offer Selection
         st.header("🎯 Job Offer Selection")
         
@@ -280,23 +337,32 @@ def main():
                 
                 # Initialize negotiator context
                 if st.session_state.negotiator_bot:
-                    user_profile = {
-                        "years_experience": 5,
-                        "industry": "technology",
-                        "primary_skill": "software development",
-                        "key_achievement": "led team that increased productivity by 40%",
-                        "education_level": "Bachelors",
-                        "leadership_experience": True,
-                        "certifications": [],
-                    }
+                    if st.session_state.resume_data:
+                        # Use resume data for personalized context
+                        user_profile = st.session_state.resume_parser.get_negotiation_context(st.session_state.resume_data)
+                    else:
+                        # Default profile if no resume uploaded
+                        user_profile = {
+                            "name": "Candidate",
+                            "years_experience": 5,
+                            "industry": "technology",
+                            "primary_skill": "software development",
+                            "key_achievement": "led team that increased productivity by 40%",
+                            "education_level": "Bachelors",
+                            "leadership_experience": True,
+                            "certifications": [],
+                            "current_title": "Software Engineer",
+                            "current_company": "Tech Company",
+                            "summary": "Experienced software engineer with strong technical skills"
+                        }
                     
                     st.session_state.context_id = st.session_state.negotiator_bot.create_negotiation_context(
-                        company_name="Tech Company",
-                        position="Software Engineer II",
+                        company_name=st.session_state.current_offer.company_name,
+                        position=st.session_state.current_offer.position,
                         user_profile=user_profile,
-                        target_salary=120000,
-                        target_benefits=["health_insurance", "401k", "stock_options"],
-                        deal_breakers=["no_remote_work", "salary_below_100k"]
+                        target_salary=int(st.session_state.current_offer.base_salary * 1.2),  # 20% above offer
+                        target_benefits=st.session_state.current_offer.benefits,
+                        deal_breakers=["no_remote_work", f"salary_below_{st.session_state.current_offer.base_salary}"]
                     )
                 
                 st.rerun()
