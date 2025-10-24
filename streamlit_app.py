@@ -3,6 +3,7 @@ import time
 import json
 from datetime import datetime
 from main import NegotiatorBot, NegotiationStrategy, ResponseTone, NegotiationContext, ResponseTemplate
+from offer_generator import OfferGenerator, CompanyType
 from dataclasses import dataclass
 from typing import List, Dict
 import random
@@ -91,29 +92,48 @@ if 'round_count' not in st.session_state:
     st.session_state.round_count = 0
 if 'conversation_active' not in st.session_state:
     st.session_state.conversation_active = False
+if 'current_offer' not in st.session_state:
+    st.session_state.current_offer = None
+if 'offer_generator' not in st.session_state:
+    st.session_state.offer_generator = OfferGenerator()
 
 # Recruiter Bot Class
 class RecruiterBot:
-    def __init__(self):
+    def __init__(self, offer=None):
+        self.offer = offer
         self.responses = [
-            "Thank you for your interest in joining our team! After reviewing your application, we're pleased to extend you an offer for the Software Engineer II position. The salary is $85,000 with comprehensive benefits including health insurance, 401k with 4% match, and 18 days PTO. This offer reflects our assessment of your qualifications and the market rate for this role. Do you have any questions about the offer?",
-            "We understand your perspective. You make some good points. Let me see what I can do - I can bump this to $87,000.",
+            "Thank you for your interest in joining our team! After reviewing your application, we're pleased to extend you an offer for the {position} position. The salary is ${salary:,} with comprehensive benefits including {benefits}. This offer reflects our assessment of your qualifications and the market rate for this role. Do you have any questions about the offer?",
+            "We understand your perspective. You make some good points. Let me see what I can do - I can bump this to ${salary:,}.",
             "I appreciate your research and market knowledge. Let me talk to my manager about improving this offer.",
-            "You're clearly talented and we don't want to lose you. I've spoken with compensation and we can go up to $90,000.",
+            "You're clearly talented and we don't want to lose you. I've spoken with compensation and we can go up to ${salary:,}.",
             "I understand your concerns about market rates. Given your strong negotiation and the value you bring, we're willing to increase our offer.",
             "We're excited about your potential and don't want this opportunity to slip away. Let's talk about what it would take to get you to yes.",
-            "Thank you for your patience. After reviewing your case and seeing your competing offers, we can offer $95,000 with the same benefits package.",
-            "We appreciate your negotiation skills and transparency. We really want to make this work - what if we went to $100,000?",
+            "Thank you for your patience. After reviewing your case and seeing your competing offers, we can offer ${salary:,} with the same benefits package.",
+            "We appreciate your negotiation skills and transparency. We really want to make this work - what if we went to ${salary:,}?",
             "I understand your position. Let me be frank - you're our top candidate and we're willing to be flexible. What's your target number?",
             "We value your expertise and the results you've delivered in the past. Let's find a number that works for both of us.",
             "You've been very persuasive. Let me present this final offer to leadership and get back to you with our best possible number."
         ]
-        self.salary_progression = [85000, 87000, 90000, 90000, 90000, 95000, 100000, 100000, 100000, 100000, 100000]
+        self.salary_progression = [0, 2000, 5000, 5000, 5000, 10000, 15000, 15000, 15000, 15000, 15000]
     
     def respond(self, round_num):
+        if self.offer is None:
+            return "No offer available", 0
+            
+        base_salary = self.offer.base_salary
+        if round_num < len(self.salary_progression):
+            current_salary = base_salary + self.salary_progression[round_num]
+        else:
+            current_salary = base_salary + self.salary_progression[-1]
+        
         if round_num < len(self.responses):
-            return self.responses[round_num], self.salary_progression[round_num]
-        return "Thank you for your time. We'll be moving forward with other candidates. Best of luck with your job search.", 100000
+            response = self.responses[round_num].format(
+                position=self.offer.position,
+                salary=current_salary,
+                benefits=", ".join(self.offer.benefits[:3])  # Show first 3 benefits
+            )
+            return response, current_salary
+        return "Thank you for your time. We'll be moving forward with other candidates. Best of luck with your job search.", current_salary
 
 def display_message(sender, message, message_type="system"):
     """Display a message in the chat interface"""
@@ -180,15 +200,58 @@ def main():
         
         st.divider()
         
+        # Offer Selection
+        st.header("🎯 Job Offer Selection")
+        
+        # Company type filter
+        company_type = st.selectbox(
+            "Company Type",
+            ["Random", "Tech Giant", "Startup", "Finance", "Consulting", "Healthcare", "Automotive", "Retail", "Media"],
+            help="Select the type of company for the job offer"
+        )
+        
+        # Generate new offer button
+        if st.button("🎲 Generate New Offer", help="Generate a random job offer"):
+            try:
+                if company_type == "Random":
+                    st.session_state.current_offer = st.session_state.offer_generator.generate_offer()
+                else:
+                    company_type_enum = CompanyType(company_type.lower().replace(" ", "_"))
+                    st.session_state.current_offer = st.session_state.offer_generator.generate_offer(company_type_enum)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error generating offer: {str(e)}")
+        
+        # Display current offer
+        if st.session_state.current_offer:
+            offer = st.session_state.current_offer
+            st.markdown("### 📋 Current Offer")
+            st.markdown(f"**🏢 Company:** {offer.company_name}")
+            st.markdown(f"**💼 Position:** {offer.position}")
+            st.markdown(f"**💰 Base Salary:** ${offer.base_salary:,}")
+            st.markdown(f"**📍 Location:** {offer.location}")
+            st.markdown(f"**🏢 Size:** {offer.company_size}")
+            st.markdown(f"**📊 Difficulty:** {'Easy' if offer.negotiation_difficulty < 0.4 else 'Medium' if offer.negotiation_difficulty < 0.7 else 'Hard'}")
+            
+            with st.expander("📝 Full Details"):
+                st.markdown(f"**Description:** {offer.description}")
+                st.markdown("**Benefits:**")
+                for benefit in offer.benefits:
+                    st.markdown(f"• {benefit}")
+        else:
+            st.info("Click 'Generate New Offer' to create a job offer for negotiation")
+        
+        st.divider()
+        
         # Start/Stop controls
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🚀 Start Negotiation", disabled=not st.session_state.negotiator_bot):
+            if st.button("🚀 Start Negotiation", disabled=not st.session_state.negotiator_bot or not st.session_state.current_offer):
                 st.session_state.conversation_active = True
                 st.session_state.conversation_history = []
                 st.session_state.round_count = 0
-                st.session_state.current_salary = 85000
+                st.session_state.current_salary = st.session_state.current_offer.base_salary
                 
                 # Initialize negotiator context
                 if st.session_state.negotiator_bot:
@@ -244,10 +307,10 @@ def main():
                 display_message(message['sender'], message['content'], message['type'])
     
     # Auto-negotiation logic
-    if st.session_state.conversation_active and st.session_state.negotiator_bot:
+    if st.session_state.conversation_active and st.session_state.negotiator_bot and st.session_state.current_offer:
         if st.session_state.round_count == 0:
             # Initial recruiter offer
-            recruiter_bot = RecruiterBot()
+            recruiter_bot = RecruiterBot(st.session_state.current_offer)
             message, salary = recruiter_bot.respond(0)
             st.session_state.conversation_history.append({
                 'sender': 'recruiter',
@@ -294,7 +357,7 @@ def main():
             # Simulate thinking time
             time.sleep(1.5)
             
-            recruiter_bot = RecruiterBot()
+            recruiter_bot = RecruiterBot(st.session_state.current_offer)
             message, salary = recruiter_bot.respond(st.session_state.round_count // 2)
             
             st.session_state.conversation_history.append({

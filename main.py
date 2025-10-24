@@ -14,6 +14,7 @@ import io
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
+from offer_generator import OfferGenerator, CompanyType
 
 # Load environment variables from .env file
 load_dotenv()
@@ -420,8 +421,9 @@ What combination of these would make sense for your organization?""",
         if context_id in self.negotiation_contexts:
             self.negotiation_contexts[context_id].leverage_points.append(leverage_point)
 
-# Global negotiator bot instance
+# Global instances
 negotiator_bot = None
+offer_generator = OfferGenerator()
     
 # Company-specific job offers with different levels
 COMPANIES = {
@@ -879,6 +881,71 @@ def download_pdf():
 @app.route('/health')
 def health():
     return jsonify({'status': 'healthy'})
+
+@app.route("/get_random_offer", methods=["GET"])
+def get_random_offer():
+    """Get a random job offer from various companies"""
+    try:
+        # Get company type from query params (optional)
+        company_type_str = request.args.get("company_type", "").lower()
+        company_type = None
+        
+        if company_type_str:
+            try:
+                company_type = CompanyType(company_type_str)
+            except ValueError:
+                pass  # Use random if invalid type
+        
+        # Generate offer
+        offer = offer_generator.generate_offer(company_type)
+        
+        # Convert to dict for JSON response
+        offer_dict = {
+            "company_name": offer.company_name,
+            "position": offer.position,
+            "base_salary": offer.base_salary,
+            "company_type": offer.company_type.value,
+            "industry": offer.industry,
+            "benefits": offer.benefits,
+            "location": offer.location,
+            "company_size": offer.company_size,
+            "description": offer.description,
+            "negotiation_difficulty": offer.negotiation_difficulty
+        }
+        
+        return jsonify(offer_dict)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/get_multiple_offers", methods=["GET"])
+def get_multiple_offers():
+    """Get multiple diverse job offers"""
+    try:
+        count = int(request.args.get("count", 5))
+        count = min(max(count, 1), 10)  # Limit between 1 and 10
+        
+        offers = offer_generator.generate_multiple_offers(count)
+        
+        # Convert to list of dicts
+        offers_list = []
+        for offer in offers:
+            offer_dict = {
+                "company_name": offer.company_name,
+                "position": offer.position,
+                "base_salary": offer.base_salary,
+                "company_type": offer.company_type.value,
+                "industry": offer.industry,
+                "benefits": offer.benefits,
+                "location": offer.location,
+                "company_size": offer.company_size,
+                "description": offer.description,
+                "negotiation_difficulty": offer.negotiation_difficulty
+            }
+            offers_list.append(offer_dict)
+        
+        return jsonify(offers_list)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Negotiator Bot Routes
 @app.route('/create_negotiation_context', methods=['POST'])
