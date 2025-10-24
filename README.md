@@ -10,13 +10,14 @@ A smart AI-powered recruiter bot that presents job offers and negotiates with ca
 - **Professional UI**: Modern, responsive design with smooth animations
 - **Offer Management**: Visual display of current offers with benefits and salary ranges
 - **Intelligent Responses**: Bot can improve, maintain, or decline offers based on negotiation quality
+- **User-Friendly Setup**: No environment variables needed - enter your OpenAI API key directly in the web interface
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.8 or higher
-- OpenAI API key
+- OpenAI API key (get one from [OpenAI](https://platform.openai.com/api-keys))
 
 ### Setup Instructions
 
@@ -33,36 +34,29 @@ A smart AI-powered recruiter bot that presents job offers and negotiates with ca
    pip install -r requirements.txt
    ```
 
-3. **Set up environment variables**
-
-   Create a `.env` file in the project root:
-
-   ```
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-   Or set the environment variable directly:
-
-   ```bash
-   export OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-4. **Run the application**
+3. **Run the application**
 
    ```bash
    python main.py
    ```
 
-5. **Access the application**
+4. **Access the application**
 
-   - Open your browser and go to `http://localhost:5000`
+   - Open your browser and go to `http://localhost:8080`
    - The app will be running locally on your machine
+
+5. **Enter your OpenAI API key**
+
+   - When you first visit the app, you'll see a field to enter your OpenAI API key
+   - Enter your API key (starts with `sk-`) and click "Save API Key"
+   - Your API key is stored locally in your browser and never sent to our servers
+   - Once saved, you can start negotiating with the recruiter bot!
 
 ## 🌐 Deployment Options
 
 ### Local Development
 
-The app runs locally on `http://localhost:5000` by default.
+The app runs locally on `http://localhost:8080` by default.
 
 ### Cloud Deployment
 
@@ -78,35 +72,48 @@ You can deploy this application to various cloud platforms:
 
 Make sure to set these environment variables in your deployment platform:
 
-- `OPENAI_API_KEY`: Your OpenAI API key
 - `PORT`: Port number (usually set automatically by the platform)
+
+**Note**: Users will enter their OpenAI API keys directly in the web interface, so no server-side API key configuration is needed.
 
 ## 🎯 How It Works
 
 ### Initial Offer Generation
 
-- The bot randomly selects from three job offer levels:
-  - **Entry Level**: Junior Software Developer ($45,000-$55,000)
-  - **Mid Level**: Software Developer ($65,000-$80,000)
-  - **Senior Level**: Senior Software Developer ($85,000-$110,000)
+- The bot randomly selects from four official job offer levels:
+  - **New Grad**: New Grad Software Engineer ($75,000)
+  - **Entry Level**: Software Engineer I ($85,000)
+  - **Mid Level**: Software Engineer II ($105,000)
+  - **Senior Level**: Senior Software Engineer ($130,000)
 
 ### Negotiation Process
 
-1. **User starts conversation** → Bot presents initial offer
-2. **User negotiates** → Bot evaluates using GPT API
+1. **User starts conversation** → Bot presents a firm, realistic job offer
+2. **User negotiates** → Bot evaluates using GPT API with strict criteria
 3. **Bot responds** with one of three actions:
-   - **Improve**: Upgrade to higher level or add benefits
-   - **Maintain**: Keep current offer
-   - **Decline**: End negotiation (for unreasonable requests)
+   - **Improve**: Upgrade to higher level or add benefits (only for compelling arguments)
+   - **Maintain**: Keep current offer (most common outcome)
+   - **Decline**: End negotiation (for unreasonable/unprofessional requests)
 
 ### GPT Evaluation Criteria
 
-The bot considers:
+The bot acts like a real recruiter and only improves offers when candidates demonstrate:
 
-- Candidate's negotiation skills
-- Reasonableness of requests
-- Professional communication
-- Market value of requested improvements
+- **Exceptional Skills**: Experience beyond role requirements
+- **Strong Negotiation**: Logical reasoning and professional communication
+- **Specific Value**: Clear benefits they bring to the company
+- **Market Research**: Knowledge of industry rates and standards
+
+**Examples of Good Negotiations:**
+
+- "I have 8 years of React experience and led a team of 5 developers. I also have AWS certifications valuable for this role."
+- "Market research shows senior developers with my microservices expertise typically earn $130,000-$150,000. I bring expertise that could save the company significant development time."
+
+**Examples of Bad Negotiations:**
+
+- "I need more money"
+- "This offer is too low"
+- "Can you increase the salary?"
 
 ## 🛠️ Technical Details
 
@@ -167,19 +174,23 @@ Modify `static/css/style.css` to customize:
 
 ## 🔧 Environment Variables
 
-| Variable         | Description                        | Required |
-| ---------------- | ---------------------------------- | -------- |
-| `OPENAI_API_KEY` | Your OpenAI API key                | Yes      |
-| `PORT`           | Port for Flask app (default: 5000) | No       |
+| Variable | Description                        | Required |
+| -------- | ---------------------------------- | -------- |
+| `PORT`   | Port for Flask app (default: 8080) | No       |
+
+**Note**: The OpenAI API key is now entered directly in the web interface, so no environment variables are needed for the API key.
 
 ## 📱 Usage Tips
 
 ### For Candidates
 
-- Be professional and respectful in negotiations
-- Highlight relevant skills and experience
-- Make reasonable requests based on market rates
-- Show enthusiasm for the role
+- **Be Professional**: Maintain respectful, business-like communication
+- **Provide Evidence**: Back up requests with specific skills, experience, or market data
+- **Research Market Rates**: Know industry standards for your role and experience level
+- **Highlight Value**: Explain how your skills benefit the company specifically
+- **Be Specific**: Instead of "I want more money," say "Based on my 5 years of React experience and team leadership, I believe I qualify for the senior level"
+- **Show Enthusiasm**: Express genuine interest in the role and company
+- **Be Reasonable**: Understand that most negotiations result in maintaining the current offer
 
 ### For Recruiters
 
@@ -191,10 +202,11 @@ Modify `static/css/style.css` to customize:
 
 ### Common Issues
 
-1. **"OpenAI API key not found"**
+1. **"API key is required" or "Invalid API key format"**
 
-   - Ensure `OPENAI_API_KEY` is set as an environment variable
-   - Check for typos in the environment variable name
+   - Make sure you've entered your OpenAI API key in the web interface
+   - Ensure your API key starts with `sk-` and is at least 20 characters long
+   - Get a valid API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 
 2. **"Error processing your message"**
 

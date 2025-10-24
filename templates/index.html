@@ -37,7 +37,25 @@
           </div>
         </div>
 
-        <div class="input-container">
+        <div class="api-key-container" id="apiKeyContainer">
+          <div class="api-key-group">
+            <input
+              type="password"
+              id="apiKeyInput"
+              placeholder="Enter your OpenAI API key..."
+              autocomplete="off"
+            />
+            <button id="saveApiKeyButton">Save API Key</button>
+          </div>
+          <div class="api-key-info">
+            <small
+              >Your API key is stored locally and never sent to our
+              servers</small
+            >
+          </div>
+        </div>
+
+        <div class="input-container" id="inputContainer" style="display: none">
           <div class="input-group">
             <input
               type="text"
@@ -47,7 +65,19 @@
             />
             <button id="sendButton" disabled>Send</button>
           </div>
-          <button id="startButton" class="start-btn">Start Conversation</button>
+          <div class="button-group">
+            <button id="startButton" class="start-btn">
+              Start Conversation
+            </button>
+            <button
+              id="changeApiKeyButton"
+              class="change-key-btn"
+              title="Change API Key"
+            >
+              <span class="icon">🔄</span>
+              <span class="text">Change</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -67,6 +97,7 @@
       let conversationStarted = false;
       let currentOfferLevel = null;
       let conversationHistory = [];
+      let userApiKey = null;
 
       const chatMessages = document.getElementById("chatMessages");
       const messageInput = document.getElementById("messageInput");
@@ -76,6 +107,11 @@
       const offerCard = document.getElementById("offerCard");
       const statusText = document.getElementById("statusText");
       const conversationStatus = document.getElementById("conversationStatus");
+      const apiKeyInput = document.getElementById("apiKeyInput");
+      const saveApiKeyButton = document.getElementById("saveApiKeyButton");
+      const apiKeyContainer = document.getElementById("apiKeyContainer");
+      const inputContainer = document.getElementById("inputContainer");
+      const changeApiKeyButton = document.getElementById("changeApiKeyButton");
 
       function addMessage(content, isBot = false, isOffer = false) {
         const messageDiv = document.createElement("div");
@@ -127,7 +163,95 @@
         }
       }
 
+      function saveApiKey() {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) {
+          alert("Please enter your OpenAI API key");
+          return;
+        }
+
+        // Basic validation for OpenAI API key format
+        if (!apiKey.startsWith("sk-") || apiKey.length < 20) {
+          alert("Please enter a valid OpenAI API key (starts with 'sk-')");
+          return;
+        }
+
+        userApiKey = apiKey;
+        localStorage.setItem("openai_api_key", apiKey);
+
+        // Hide API key container and show input container
+        apiKeyContainer.style.display = "none";
+        inputContainer.style.display = "block";
+
+        addMessage(
+          "API key saved successfully! You can now start negotiating.",
+          true
+        );
+        updateStatus("API key configured", "Ready to start");
+      }
+
+      function loadApiKey() {
+        const savedApiKey = localStorage.getItem("openai_api_key");
+        if (savedApiKey) {
+          userApiKey = savedApiKey;
+          apiKeyContainer.style.display = "none";
+          inputContainer.style.display = "block";
+          addMessage(
+            "Welcome back! Your API key is loaded. Ready to negotiate!",
+            true
+          );
+          updateStatus("API key loaded", "Ready to start");
+        } else {
+          addMessage(
+            "Please enter your OpenAI API key to start negotiating with the recruiter bot.",
+            true
+          );
+          updateStatus("API key required", "Not configured");
+        }
+      }
+
+      function changeApiKey() {
+        // Clear the current API key
+        userApiKey = null;
+        localStorage.removeItem("openai_api_key");
+
+        // Reset conversation state
+        conversationStarted = false;
+        currentOfferLevel = null;
+        conversationHistory = [];
+
+        // Hide input container and show API key container
+        inputContainer.style.display = "none";
+        apiKeyContainer.style.display = "block";
+
+        // Clear the API key input field
+        apiKeyInput.value = "";
+
+        // Reset UI elements
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        startButton.style.display = "block";
+        startButton.disabled = false;
+
+        // Clear chat messages except the first one
+        const messages = chatMessages.querySelectorAll(".message");
+        for (let i = 1; i < messages.length; i++) {
+          messages[i].remove();
+        }
+
+        // Hide offer display
+        offerDisplay.style.display = "none";
+
+        addMessage("Please enter your new OpenAI API key to continue.", true);
+        updateStatus("API key required", "Not configured");
+      }
+
       async function startConversation() {
+        if (!userApiKey) {
+          alert("Please enter your OpenAI API key first");
+          return;
+        }
+
         try {
           updateStatus("Starting conversation...", "Starting");
           startButton.disabled = true;
@@ -137,9 +261,19 @@
             headers: {
               "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+              api_key: userApiKey,
+            }),
           });
 
           const data = await response.json();
+
+          if (data.error) {
+            addMessage(data.error, true);
+            updateStatus("Error occurred", "Failed");
+            startButton.disabled = false;
+            return;
+          }
 
           addMessage(data.message, true);
           updateOfferDisplay(data.offer, data.offer_level);
@@ -180,6 +314,7 @@
               message: message,
               offer_level: currentOfferLevel,
               history: conversationHistory,
+              api_key: userApiKey,
             }),
           });
 
@@ -243,6 +378,8 @@
       // Event listeners
       startButton.addEventListener("click", startConversation);
       sendButton.addEventListener("click", sendMessage);
+      saveApiKeyButton.addEventListener("click", saveApiKey);
+      changeApiKeyButton.addEventListener("click", changeApiKey);
 
       messageInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter" && !sendButton.disabled) {
@@ -250,10 +387,21 @@
         }
       });
 
+      apiKeyInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          saveApiKey();
+        }
+      });
+
       // Enable/disable send button based on input
       messageInput.addEventListener("input", () => {
         sendButton.disabled =
           !messageInput.value.trim() || !conversationStarted;
+      });
+
+      // Initialize the app
+      document.addEventListener("DOMContentLoaded", () => {
+        loadApiKey();
       });
     </script>
   </body>
