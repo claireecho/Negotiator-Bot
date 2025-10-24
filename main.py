@@ -80,6 +80,46 @@ I'm curious about your compensation philosophy - do you typically benchmark agai
                 effectiveness_score=0.85
             ),
             
+            # More Aggressive and Persuasive Templates
+            ResponseTemplate(
+                template_id="market_value_assertion_strong",
+                strategy=NegotiationStrategy.CONFIDENT_ASSERTIVE,
+                tone=ResponseTone.CONFIDENTLY_ASSERTIVE,
+                template_text="""I appreciate the offer, but I need to be direct about the market reality. My research shows that professionals with my {experience_years} years of experience in {industry} and proven track record of {achievement} are commanding {target_salary_range} in the current market.
+
+I have multiple offers in the pipeline, and while I'm genuinely excited about this opportunity, I need to ensure we're aligned on compensation. The current offer is approximately {salary_gap} below market rate, which concerns me about how the company values top talent.
+
+What flexibility do you have to bridge this gap? I'm confident I can deliver exceptional value, but I need compensation that reflects that value proposition.""",
+                variables=["experience_years", "industry", "achievement", "target_salary_range", "salary_gap"],
+                effectiveness_score=0.92
+            ),
+            
+            ResponseTemplate(
+                template_id="leverage_competition",
+                strategy=NegotiationStrategy.CONFIDENT_ASSERTIVE,
+                tone=ResponseTone.CONFIDENTLY_ASSERTIVE,
+                template_text="""I'm excited about this role, but I need to be transparent about my situation. I have a competing offer from {competitor_company} for {competing_salary}, and while I prefer this opportunity, the compensation gap is significant.
+
+My decision timeline is tight - I need to respond to them by {deadline}. However, I'm willing to give you priority if we can find a mutually beneficial arrangement.
+
+What's the highest you can go? I'm looking for {target_salary} to make this work, but I'm open to creative solutions like performance bonuses, equity, or accelerated review cycles.""",
+                variables=["competitor_company", "competing_salary", "deadline", "target_salary"],
+                effectiveness_score=0.95
+            ),
+            
+            ResponseTemplate(
+                template_id="value_proposition_strong",
+                strategy=NegotiationStrategy.CONFIDENT_ASSERTIVE,
+                tone=ResponseTone.CONFIDENTLY_ASSERTIVE,
+                template_text="""Let me be clear about what I bring to the table. In my previous role, I {specific_achievement} which resulted in {quantified_impact}. I'm not just looking for a job - I'm looking to make a significant impact.
+
+The current offer doesn't reflect the value I can deliver. I'm confident I can {future_value_proposition} within the first year, which would justify a higher compensation package.
+
+I'm asking for {target_salary} because that's what the market pays for someone who can deliver these results. What do you think about structuring this as a performance-based increase with a higher base?""",
+                variables=["specific_achievement", "quantified_impact", "future_value_proposition", "target_salary"],
+                effectiveness_score=0.90
+            ),
+            
             ResponseTemplate(
                 template_id="benefits_inadequate",
                 strategy=NegotiationStrategy.PROFESSIONAL_PASSIVE_AGGRESSIVE,
@@ -280,14 +320,41 @@ What combination of these would make sense for your organization?""",
                 variables[var] = context.user_profile.get("key_achievement", "increasing team productivity by 40%")
             elif var == "company_name":
                 variables[var] = context.company_name
-        
+            elif var == "target_salary_range":
+                variables[var] = f"${context.target_salary - 10000}-${context.target_salary + 10000}" if context.target_salary else "$100,000-$130,000"
+            elif var == "salary_gap":
+                if context.current_offer and context.target_salary:
+                    current_salary = context.current_offer.get("salary", 0)
+                    if isinstance(current_salary, str):
+                        current_salary = int(''.join(filter(str.isdigit, current_salary)))
+                    gap = context.target_salary - current_salary
+                    variables[var] = f"${gap:,}"
+                else:
+                    variables[var] = "$15,000-$25,000"
+            elif var == "competitor_company":
+                companies = ["Google", "Microsoft", "Amazon", "Apple", "Meta", "Netflix", "Uber", "Airbnb"]
+                variables[var] = companies[hash(context.company_name) % len(companies)]
+            elif var == "competing_salary":
+                target = context.target_salary or 120000
+                variables[var] = f"${target + 5000:,}"
+            elif var == "deadline":
+                variables[var] = "Friday"
+            elif var == "target_salary":
+                variables[var] = f"${context.target_salary:,}" if context.target_salary else "$120,000"
+            elif var == "quantified_impact":
+                impacts = ["increased revenue by 150%", "reduced costs by $2M annually", "improved efficiency by 40%", "led to 300% user growth"]
+                variables[var] = impacts[hash(context.company_name) % len(impacts)]
+            elif var == "future_value_proposition":
+                propositions = ["increase team productivity by 50%", "deliver $5M in cost savings", "launch 3 major features", "build a scalable architecture"]
+                variables[var] = propositions[hash(context.company_name) % len(propositions)]
+                
         # Format template with variables
         formatted_template = template.template_text.format(**variables)
         
         # Enhance with AI
         enhancement_prompt = f"""
-        Enhance this professional negotiation response to be more persuasive and strategically effective:
-        
+        Transform this negotiation response into a highly persuasive, strategic communication that will make the recruiter more likely to increase their offer. Use advanced negotiation psychology:
+
         Original Response:
         {formatted_template}
         
@@ -295,19 +362,30 @@ What combination of these would make sense for your organization?""",
         - Company: {context.company_name}
         - Position: {context.position}
         - Target salary: {context.target_salary}
+        - Current offer: {context.current_offer}
         - Leverage points: {context.leverage_points}
         
-        Make the response more compelling while maintaining professionalism. Add subtle psychological pressure and positioning tactics that make the candidate appear more valuable and desirable.
+        Apply these persuasive techniques:
+        1. Create urgency and scarcity ("I have other offers", "timeline pressure")
+        2. Use social proof and authority ("industry standards", "market research")
+        3. Frame as mutual benefit ("win-win", "partnership")
+        4. Use specific numbers and data
+        5. Create FOMO (fear of missing out)
+        6. Use confident, assertive language
+        7. Suggest creative solutions
+        8. Reference the company's values/mission
         
-        Keep the response concise but impactful.
+        Make the candidate sound highly desirable and in-demand. The recruiter should feel they need to act quickly to secure this talent.
+        
+        Keep it professional but compelling. Maximum 200 words.
         """
         
         try:
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": enhancement_prompt}],
-                temperature=0.7,
-                max_tokens=500
+                temperature=0.8,
+                max_tokens=300
             )
             
             return response.choices[0].message.content.strip()
